@@ -1,0 +1,111 @@
+Below is a concise plan-improvement file you can feed Claude to update the existing plan, plus a minimal repo layout and a starter GitHub Actions workflow to run headless FreeCAD + your MCP verification steps. Save this as plain text (e.g., plan_improvements.txt) or paste into Claude.
+
+--- plan_improvements.txt ---
+
+Title: QD_Bar — Reliability, CI, and Parametric Automation Additions
+
+Summary:
+Add deterministic parameter management, CI-driven verification, parametric safety guards, automated diagnostics, and manufacturability checks to the QD_Bar project so changes (NumSlots, spacing, clearances) are validated automatically and regressions are caught on PR.
+
+Repo layout (suggested)
+- /cad/
+  - QD_Bar.FCStd
+  - Distribution_Block.FCStd
+  - Lid.FCStd
+  - Mount.FCStd
+  - varsets/
+    - qd_bar_vars.json
+- /mcp-tests/
+  - verify_recompute.py        # mcp client script: load varset, recompute, screenshots
+  - check_shape.py             # shape analysis + watertight checks
+  - sketch_diagnostics.py      # calls mcp__freecad__get_sketch_diagnostics
+  - run_all.py                 # runs the above in sequence, exits non-zero on failure
+- .github/workflows/
+  - cad-ci.yml                 # GitHub Actions workflow to run mcp-tests headless
+- README.md
+- Makefile                     # targets: test, export-stl, regen-variants
+
+VarSet file (qd_bar_vars.json) — canonical param source (example)
+{
+  "NumSlots": 6,
+  "SlotWidth": 6.6,
+  "SlotSpacing": 9.5,
+  "SlotDepth": 10,
+  "WireNotchW": 5,
+  "WireNotchD": 6,
+  "WallThick": 2,
+  "BodyHeight": 22,
+  "GrooveW": 1.4,
+  "GrooveD": 1.2,
+  "GrooveZ": 4,
+  "ClipH": 1,
+  "Width": 30,
+  "MinLength": 40,
+  "ClearanceSide": 0.1,
+  "ClipClearance": 0.05,
+  "MountSpan": 120,
+  "MountSlotW": 5,
+  "MountSlotL": 10,
+  "MountRiserH": 25,
+  "MountLegW": 12,
+  "MountThick": 3.5,
+  "MountShelfD": 15
+}
+
+Parametric guards / recommended expression examples (to add in VarSet or as NamedExpressions)
+- Length = max( MinLength, (max(1, floor(NumSlots)) - 1) * SlotSpacing + SlotWidth + 2 * WallThick )
+- Slot_Occurrences = max(1, floor(NumSlots))
+- SlotPocketDepth = min(SlotDepth, BodyHeight - 5)  # leaves 5mm floor min
+- ClearancePerSide = max(0.05, ClearanceSide)
+- Rail_Width = GrooveW - ClearancePerSide
+- Clip_Tab_Engage = max(0, ClipH - ClipClearance)
+
+Verification tests (mcp-tests/run_all.py behavior)
+1. Load qd_bar_vars.json into FreeCAD document via mcp endpoint or Python loader.
+2. Trigger recompute.
+3. Screenshot assembly (mcp__freecad__get_screenshot) — save as artifact.
+4. Count slot pattern occurrences (query shape tree or slot count feature).
+5. Run shape analysis (mcp__freecad__analyze_shape) on Body pad and each Pocket: assert bounding boxes match expected Length×Width×BodyHeight tolerances.
+6. Run sketch diagnostics for each sketch — fail on under/over-constrained sketches.
+7. Mesh/watertight check: export temporary STL and run simple watertight test (manifold test or mesh volume > 0).
+8. Parametric fuzz test: repeat recompute with NumSlots = [2,6,8] and SlotSpacing = base ± 0.5mm; ensure no crashes and slot counts match.
+9. Exit non-zero on any failed assertion.
+
+CI workflow (minimal .github/workflows/cad-ci.yml)
+- Trigger: push, pull_request on main branches.
+- Jobs:
+  - setup:
+    - runs-on: ubuntu-latest
+    - steps:
+      - checkout
+      - apt-get install dependencies (FreeCAD headless via apt or prebuilt, python3-pip)
+      - pip install mcp-client (or your MCP client lib) and pytest
+      - start headless FreeCAD/mcp server if needed (or use Docker image with FreeCAD+mcp preinstalled)
+      - run: python3 mcp-tests/run_all.py
+      - upload artifacts: screenshots, exported STLs, logs
+
+Design rule checks (to implement in check_shape.py)
+- Min wall thickness >= MountThick or specified MinWall
+- Slot width >= 6.3 + SideClearance
+- Groove depth >= GrooveD and GrooveW within printability limits
+- Minimum feature size >= nozzle_diameter * 1.5 (configurable)
+
+Manufacturing notes to embed in README.md
+- Recommended print orientation: long axis horizontal, rails printed with minimal bridging
+- Layer height: 0.2 mm; nozzle: 0.4 mm; wall/perimeter: 2; infill: 20%
+- Tolerances: ClearanceSide default 0.1 mm; ClipClearance 0.05 mm; adjust per filament/shrinkage
+- Suggested chamfers: 0.3 mm on rail entry; fillet inner corners 0.5 mm
+
+Short actionable first PR tasks for Claude to perform
+1. Create qd_bar_vars.json in repo root and replace inline hardcoded values in QD_Bar.FCStd expressions with references to the loader variable names.
+2. Add mcp-tests/run_all.py that implements the verification steps and returns non-zero on failure.
+3. Add .github/workflows/cad-ci.yml that runs run_all.py on PRs and uploads artifacts.
+
+--- end of plan_improvements.txt ---
+
+If you want, I can now generate:
+- the concrete qd_bar_vars.json (filled above) as a downloadable file,
+- a starter run_all.py script (Python mcp calls + assertions),
+- or a full cad-ci.yml contents ready to paste into .github/workflows.
+
+Which file should I generate next?

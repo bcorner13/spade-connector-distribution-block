@@ -1,0 +1,49 @@
+{
+  "_comment": "QD_Bar canonical parameter source. Base (non-computed) values match FreeCAD Params VarSet. Edit here first, then sync to FreeCAD via mcp-tests/verify_recompute.py.",
+
+  "NumSlots": 6,
+  "SlotWidth": 6.6,
+  "SlotLength": 9.2,
+  "SlotDepth": 10,
+  "WireNotchW": 5,
+  "WireNotchD": 6,
+  "WallThick": 2,
+  "BodyHeight": 22,
+  "MinLength": 6.3,
+
+  "GrooveW": 1.4,
+  "GrooveD": 1.2,
+  "GrooveZ": 4,
+  "ClipH": 1,
+  "ClearanceSide": 0.1,
+  "ClipClearance": 0.05,
+
+  "TroughDepth": 6.8,
+  "TroughFloorHeight": 4.0,
+
+  "PillarLength": 18,
+  "PillarOffset": 8,
+  "PillarRadius": 5,
+  "PillarWidth": 16,
+  "PillarSlotLength": 6,
+
+  "BoltDiameter": 4.5,
+  "NutReces": 1.6,
+  "CutoutRadius": 7,
+
+  "MountSpan": 120,
+  "MountSlotW": 5,
+  "MountSlotL": 10,
+  "MountRiserH": 25,
+  "MountLegW": 12,
+  "MountThick": 3.5,
+  "MountShelfD": 15,
+
+  "_derived_note": "These are computed by FreeCAD VarSet expressions, not stored here.",
+  "_derived": {
+    "BlockLength": "max(MinLength; max(1; floor(NumSlots)) * SlotSpacing) + WallThick",
+    "BlockWidth": "2 * (SlotWidth + WallThick * 2)",
+    "LidWidth": "2 * (SlotWidth + WallThick * 2) - GrooveD * 4",
+    "SlotSpacing": "SlotLength + WallThick"
+  }
+}

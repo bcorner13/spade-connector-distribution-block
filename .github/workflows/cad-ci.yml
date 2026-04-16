@@ -1,0 +1,65 @@
+name: CAD CI - Static validation
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required files present
+        run: |
+          files=(
+            "files/QD_Bar.FCStd"
+            "Distribution Block.FCStd"
+            "Lid.FCStd"
+            "cad/Mount.FCStd"
+            "cad/varsets/qd_bar_vars.json"
+            "Makefile"
+          )
+          fail=0
+          for f in "${files[@]}"; do
+            if [ -f "$f" ]; then
+              echo "ok: $f"
+            else
+              echo "MISSING: $f" >&2
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Validate qd_bar_vars.json
+        run: |
+          python3 -c "
+          import json, sys
+          with open('cad/varsets/qd_bar_vars.json') as f:
+              data = json.load(f)
+          print(f'JSON valid — {len(data)} keys')
+          "
+
+      - name: Syntax-check mcp-tests scripts
+        run: |
+          pip install requests --quiet
+          fail=0
+          for f in mcp-tests/*.py; do
+            if python3 -m py_compile "$f"; then
+              echo "ok: $f"
+            else
+              echo "SYNTAX ERROR: $f" >&2
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Local testing note
+        run: |
+          echo "---"
+          echo "Full MCP verification (make test) requires FreeCAD 1.1 + FreeCAD MCP Server addon (TCP port 9876)."
+          echo "Run locally: make test"
+          echo "---"

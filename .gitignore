@@ -1,0 +1,21 @@
+# FreeCAD backups
+*.FCBak
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+
+# Generated test artifacts
+mcp-tests/output/
+
+# Claude Code local state
+.claude/
+
+# Broken/empty root-level exports
+Distribution Block-AssemblyBody.stl
+Distribution Block-Distribution_Block.stl
+
+# Old manual assembly export (generated version lives in files/)
+/PowerDistribution.3mf

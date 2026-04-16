@@ -1,0 +1,4 @@
+Spade Connector Distribution Block by frankjay on Thingiverse: https://www.thingiverse.com/thing:4854104
+
+Summary:
+For connecting multiple devices to one power/signal source.Add female spade connectors in top slots, space for soldering together beneath, solder protruding male spade connectors out bottom slots.When using crimp connectors recommend soldering them as well.Combine female connector to a roughly 3 inch length of bare wire and insert into rearmost slot, bend the wire forward so it sticks out the front/bottom notches then combine 2 more female connectors with 1" of bare wire, insert and solder together, repeat for other side... glue on base and add male connectors as inputs.PLA plastic stands up well to the heat of soldering, push joints flat to fit into space and use superglue to enclose with base.I have not yet tested this version of the design but i'm confident it is the best one so fari will have photos of the assembly steps uploaded shortly
